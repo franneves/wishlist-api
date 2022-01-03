@@ -1,0 +1,44 @@
+version: '3.9'
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    networks:
+      - wishlist-net
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: wishlists
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+  wishlist-service:
+    container_name:  wishlist-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image:  wishlist-service:latest
+    ports:
+      - "9095:9095"
+    restart: unless-stopped
+    networks:
+      - wishlist-net
+    depends_on:
+      - mongodb
+    links:
+      - mongodb:alias
+    environment:
+      - SERVER_PORT=9095
+      - SPRING_DATA_MONGODB_PORT=27017
+      - SPRING_DATA_MONGODB_HOST=alias
+      - SPRING_DATA_MONGODB_DATABASE=wishlists
+      - SPRING_DATA_MONGODB_AUTHENTICATION-DATABASE=admin
+      - SPRING_DATA_MONGODB_USERNAME=user
+      - SPRING_DATA_MONGODB_PASSWORD=password
+      - SPRING_DATA_MONGODB_AUTO-INDEX-CREATION=true
+networks:
+  wishlist-net:
+
